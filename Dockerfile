@@ -1,14 +1,12 @@
-# Use official Tomcat base image with Java
+# Step 1: Build the WAR file using Maven
+FROM maven:3.8.5-openjdk-8 AS build
+WORKDIR /app
+COPY . .
+RUN mvn clean package -DskipTests
+
+# Step 2: Deploy the WAR file to Tomcat
 FROM tomcat:9.0
-
-# Remove all default apps in Tomcat
 RUN rm -rf /usr/local/tomcat/webapps/*
-
-# Copy your WAR file into the webapps directory as ROOT.war
-COPY target/RenderDocker.war /usr/local/tomcat/webapps/ROOT.war
-
-# Expose port (Render will map it automatically)
+COPY --from=build /app/target/RenderDocker.war /usr/local/tomcat/webapps/ROOT.war
 EXPOSE 8080
-
-# Start Tomcat server
 CMD ["catalina.sh", "run"]
